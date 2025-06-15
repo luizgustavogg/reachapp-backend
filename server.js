@@ -15,16 +15,20 @@ import {
   getUserRetention,
 } from "./services/websiteServices.js";
 
-// Carrega variáveis de ambiente (usado localmente)
+// Carrega variáveis locais (opcional em produção)
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Inicializa o cliente GA4 com as credenciais (100% via variável de ambiente)
+// Inicializa cliente GA4 via BASE64 (seguro e compatível com Vercel)
 try {
-  console.log("🧪 SERVICE_ACCOUNT_JSON está definida?", !!process.env.SERVICE_ACCOUNT_JSON);
-  const credentials = JSON.parse(process.env.SERVICE_ACCOUNT_JSON);
+  const base64 = process.env.GOOGLE_SERVICE_ACCOUNT_BASE64;
+  if (!base64) throw new Error("Variável GOOGLE_SERVICE_ACCOUNT_BASE64 não está definida");
+
+  const json = Buffer.from(base64, "base64").toString("utf8");
+  const credentials = JSON.parse(json);
+
   initAnalyticsClient(credentials);
   console.log("✅ Cliente GA4 inicializado com sucesso");
 } catch (err) {
@@ -53,7 +57,7 @@ app.get("/insights/postagens", async (_req, res) => {
   }
 });
 
-// ROTAS GOOGLE ANALYTICS
+// ROTAS ANALYTICS
 app.get("/analytics/reach", async (_req, res) => {
   try {
     const data = await getReach();
