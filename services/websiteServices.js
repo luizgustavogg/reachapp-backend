@@ -30,7 +30,7 @@ function getRandomInt(min, max) {
 }
 
 function getPropertyId() {
-  return `properties/${(process.env.GA4_PROPERTY_ID || "").trim()}`;
+  return `properties/493449965`;
 }
 
 // --- Random Example Generators ---
