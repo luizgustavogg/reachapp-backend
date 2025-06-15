@@ -9,7 +9,6 @@ function buildDateRange(startDate, endDate) {
   if (startDate && endDate) {
     return [{ startDate, endDate }];
   }
-
   const today = new Date();
   const thirtyDaysAgo = subDays(today, 29);
   return [{
@@ -27,6 +26,8 @@ function getLast30Dates() {
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+// --- Random Example Generators ---
 
 function getRandomExampleByDate() {
   return getLast30Dates().map(date => ({
@@ -57,6 +58,32 @@ function getRandomExampleByDevice() {
     }))
   );
 }
+
+function getRandomTrafficSources() {
+  const sources = ['organic', 'paid', 'direct', 'referral'];
+  return sources.map(source => ({
+    source,
+    users: getRandomInt(50, 300),
+  }));
+}
+
+function getRandomEngagement() {
+  return {
+    averageSessionDuration: getRandomInt(60, 300),
+    engagedSessions: getRandomInt(100, 500),
+  };
+}
+
+function getRandomUserRetention() {
+  return [
+    { cohort: 'Day 0', retentionRate: 100 },
+    { cohort: 'Day 1', retentionRate: getRandomInt(20, 80) },
+    { cohort: 'Day 7', retentionRate: getRandomInt(5, 40) },
+    { cohort: 'Day 30', retentionRate: getRandomInt(1, 20) },
+  ];
+}
+
+// --- Real Data Functions ---
 
 export async function getReach() {
   const [response] = await analyticsDataClient.runReport({
@@ -117,5 +144,67 @@ export async function getByDevice(startDate, endDate, type) {
     date: row.dimensionValues[0]?.value,
     device: row.dimensionValues[1]?.value,
     sessions: parseInt(row.metricValues[0]?.value || '0'),
+  }));
+}
+
+export async function getTrafficSources(type) {
+  if (type === 'example') {
+    const sources = ['google', 'direct', 'facebook', 'instagram'];
+    return sources.map(source => ({
+      source,
+      sessions: getRandomInt(100, 500),
+    }));
+  }
+
+  const [response] = await analyticsDataClient.runReport({
+    property: `properties/${process.env.GA4_PROPERTY_ID}`,
+    dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+    dimensions: [{ name: 'sessionSource' }],
+    metrics: [{ name: 'sessions' }],
+  });
+
+  return (response?.rows || []).map(row => ({
+    source: row.dimensionValues[0]?.value,
+    sessions: parseInt(row.metricValues[0]?.value || '0'),
+  }));
+}
+
+
+export async function getEngagement(type) {
+  if (type === 'example') return getRandomEngagement();
+
+  const [response] = await analyticsDataClient.runReport({
+    property: `properties/${process.env.GA4_PROPERTY_ID}`,
+    dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+    metrics: [{ name: 'averageSessionDuration' }, { name: 'engagedSessions' }],
+  });
+
+  const [row] = response?.rows || [];
+
+  return {
+    averageSessionDuration: parseFloat(row?.metricValues?.[0]?.value || '0'),
+    engagedSessions: parseInt(row?.metricValues?.[1]?.value || '0'),
+  };
+}
+
+export async function getUserRetention(type) {
+  if (type === 'example') {
+    return Array.from({ length: 5 }, (_, i) => ({
+      cohort: `Dia ${i + 1}`,
+      retentionRate: getRandomInt(5, 80),
+    }));
+  }
+
+  const [response] = await analyticsDataClient.runReport({
+    property: `properties/${process.env.GA4_PROPERTY_ID}`,
+    dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+    dimensions: [{ name: 'date' }, { name: 'newVsReturning' }],
+    metrics: [{ name: 'activeUsers' }],
+  });
+
+  return (response?.rows || []).map(row => ({
+    date: row.dimensionValues[0]?.value,
+    userType: row.dimensionValues[1]?.value, // NEW or RETURNING
+    activeUsers: parseInt(row.metricValues[0]?.value || '0'),
   }));
 }

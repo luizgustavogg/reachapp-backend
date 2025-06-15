@@ -9,6 +9,9 @@ import {
   getByDate,
   getByCountry,
   getByDevice,
+  getTrafficSources,
+  getEngagement,
+  getUserRetention,
 } from "./services/websiteServices.js";
 
 dotenv.config();
@@ -75,6 +78,39 @@ app.get("/analytics/by-device", async (req, res) => {
   } catch (err) {
     console.error("Erro /analytics/by-device:", err.message);
     res.status(500).json({ error: "Erro ao buscar dados por dispositivo" });
+  }
+});
+
+app.get("/analytics/traffic-sources", async (req, res) => {
+  const { type } = req.query;
+  try {
+    const data = await getTrafficSources(type);
+    res.json(data);
+  } catch (err) {
+    console.error("Erro /analytics/traffic-sources:", err.message);
+    res.status(500).json({ error: "Erro ao buscar fontes de tráfego" });
+  }
+});
+
+app.get("/analytics/engagement", async (req, res) => {
+  const { type } = req.query;
+  try {
+    const data = await getEngagement(type);
+    res.json(data);
+  } catch (err) {
+    console.error("Erro /analytics/engagement:", err.message);
+    res.status(500).json({ error: "Erro ao buscar dados de engajamento" });
+  }
+});
+
+app.get("/analytics/user-retention", async (req, res) => {
+  const { type } = req.query;
+  try {
+    const data = await getUserRetention(type);
+    res.json(data);
+  } catch (err) {
+    console.error("Erro /analytics/user-retention:", err.message);
+    res.status(500).json({ error: "Erro ao buscar dados de retenção" });
   }
 });
 
