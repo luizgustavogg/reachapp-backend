@@ -15,21 +15,22 @@ import {
   getUserRetention,
 } from "./services/websiteServices.js";
 
-// Carrega variáveis locais (opcional em produção)
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Inicializa cliente GA4 via BASE64 (seguro e compatível com Vercel)
 try {
   const base64 = process.env.GOOGLE_SERVICE_ACCOUNT_BASE64;
-  if (!base64) throw new Error("Variável GOOGLE_SERVICE_ACCOUNT_BASE64 não está definida");
+  const propertyId = process.env.GA4_PROPERTY_ID;
+
+  if (!base64 || !propertyId)
+    throw new Error("Variáveis de ambiente ausentes");
 
   const json = Buffer.from(base64, "base64").toString("utf8");
   const credentials = JSON.parse(json);
 
-  initAnalyticsClient(credentials);
+  initAnalyticsClient(credentials, propertyId);
   console.log("✅ Cliente GA4 inicializado com sucesso");
 } catch (err) {
   console.error("❌ Erro ao carregar credenciais GA4:", err.message);
@@ -133,9 +134,7 @@ app.get("/analytics/user-retention", async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar dados de retenção" });
   }
 });
-console.log("🔍 GA4_PROPERTY_ID:", process.env.GA4_PROPERTY_ID);
 
-// INICIA SERVIDOR
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });

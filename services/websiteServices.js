@@ -2,9 +2,12 @@ import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import { format, subDays } from 'date-fns';
 
 let analyticsDataClient;
+let propertyId;
 
-export function initAnalyticsClient(credentials) {
+export function initAnalyticsClient(credentials, id) {
   analyticsDataClient = new BetaAnalyticsDataClient({ credentials });
+  propertyId = id?.trim();
+  if (!propertyId) throw new Error("GA4_PROPERTY_ID ausente");
 }
 
 function buildDateRange(startDate, endDate) {
@@ -30,67 +33,10 @@ function getRandomInt(min, max) {
 }
 
 function getPropertyId() {
-  const id = process.env.GA4_PROPERTY_ID?.trim();
-  if (!id) throw new Error("GA4_PROPERTY_ID não está definida");
-  return `properties/${id}`;
+  return `properties/${propertyId}`;
 }
 
-// --- Random Example Generators ---
-function getRandomExampleByDate() {
-  return getLast30Dates().map(date => ({
-    date,
-    sessions: getRandomInt(10, 100),
-    users: getRandomInt(5, 80),
-  }));
-}
-
-function getRandomExampleByCountry() {
-  const countries = ['Brazil', 'United States', 'India', 'Canada'];
-  return getLast30Dates().flatMap(date =>
-    countries.map(country => ({
-      date,
-      country,
-      sessions: getRandomInt(1, 20),
-    }))
-  );
-}
-
-function getRandomExampleByDevice() {
-  const devices = ['mobile', 'desktop', 'tablet'];
-  return getLast30Dates().flatMap(date =>
-    devices.map(device => ({
-      date,
-      device,
-      sessions: getRandomInt(1, 25),
-    }))
-  );
-}
-
-function getRandomTrafficSources() {
-  const sources = ['organic', 'paid', 'direct', 'referral'];
-  return sources.map(source => ({
-    source,
-    users: getRandomInt(50, 300),
-  }));
-}
-
-function getRandomEngagement() {
-  return {
-    averageSessionDuration: getRandomInt(60, 300),
-    engagedSessions: getRandomInt(100, 500),
-  };
-}
-
-function getRandomUserRetention() {
-  return [
-    { cohort: 'Day 0', retentionRate: 100 },
-    { cohort: 'Day 1', retentionRate: getRandomInt(20, 80) },
-    { cohort: 'Day 7', retentionRate: getRandomInt(5, 40) },
-    { cohort: 'Day 30', retentionRate: getRandomInt(1, 20) },
-  ];
-}
-
-// --- Real Data Functions ---
+// --- Funções reais de dados ---
 export async function getReach() {
   const [response] = await analyticsDataClient.runReport({
     property: getPropertyId(),
@@ -103,7 +49,11 @@ export async function getReach() {
 }
 
 export async function getByDate(startDate, endDate, type) {
-  if (type === 'example') return getRandomExampleByDate();
+  if (type === 'example') return getLast30Dates().map(date => ({
+    date,
+    sessions: getRandomInt(10, 100),
+    users: getRandomInt(5, 80),
+  }));
 
   const [response] = await analyticsDataClient.runReport({
     property: getPropertyId(),
@@ -120,7 +70,16 @@ export async function getByDate(startDate, endDate, type) {
 }
 
 export async function getByCountry(startDate, endDate, type) {
-  if (type === 'example') return getRandomExampleByCountry();
+  if (type === 'example') {
+    const countries = ['Brazil', 'US', 'India'];
+    return getLast30Dates().flatMap(date =>
+      countries.map(country => ({
+        date,
+        country,
+        sessions: getRandomInt(1, 20),
+      }))
+    );
+  }
 
   const [response] = await analyticsDataClient.runReport({
     property: getPropertyId(),
@@ -137,7 +96,16 @@ export async function getByCountry(startDate, endDate, type) {
 }
 
 export async function getByDevice(startDate, endDate, type) {
-  if (type === 'example') return getRandomExampleByDevice();
+  if (type === 'example') {
+    const devices = ['mobile', 'desktop', 'tablet'];
+    return getLast30Dates().flatMap(date =>
+      devices.map(device => ({
+        date,
+        device,
+        sessions: getRandomInt(1, 25),
+      }))
+    );
+  }
 
   const [response] = await analyticsDataClient.runReport({
     property: getPropertyId(),
@@ -155,10 +123,9 @@ export async function getByDevice(startDate, endDate, type) {
 
 export async function getTrafficSources(type) {
   if (type === 'example') {
-    const sources = ['google', 'direct', 'facebook', 'instagram'];
-    return sources.map(source => ({
+    return ['google', 'direct', 'referral'].map(source => ({
       source,
-      sessions: getRandomInt(100, 500),
+      sessions: getRandomInt(50, 300),
     }));
   }
 
@@ -176,7 +143,12 @@ export async function getTrafficSources(type) {
 }
 
 export async function getEngagement(type) {
-  if (type === 'example') return getRandomEngagement();
+  if (type === 'example') {
+    return {
+      averageSessionDuration: getRandomInt(60, 300),
+      engagedSessions: getRandomInt(100, 500),
+    };
+  }
 
   const [response] = await analyticsDataClient.runReport({
     property: getPropertyId(),
@@ -196,7 +168,7 @@ export async function getUserRetention(type) {
   if (type === 'example') {
     return Array.from({ length: 5 }, (_, i) => ({
       cohort: `Dia ${i + 1}`,
-      retentionRate: getRandomInt(5, 80),
+      retentionRate: getRandomInt(10, 80),
     }));
   }
 
