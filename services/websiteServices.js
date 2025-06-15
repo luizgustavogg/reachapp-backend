@@ -1,9 +1,12 @@
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
-import dotenv from 'dotenv';
 import { format, subDays } from 'date-fns';
-dotenv.config();
 
-const analyticsDataClient = new BetaAnalyticsDataClient();
+let analyticsDataClient; // cliente será inicializado externamente
+
+// Esta função será chamada no server.js
+export function initAnalyticsClient(credentials) {
+  analyticsDataClient = new BetaAnalyticsDataClient({ credentials });
+}
 
 function buildDateRange(startDate, endDate) {
   if (startDate && endDate) {
@@ -28,7 +31,6 @@ function getRandomInt(min, max) {
 }
 
 // --- Random Example Generators ---
-
 function getRandomExampleByDate() {
   return getLast30Dates().map(date => ({
     date,
@@ -84,7 +86,6 @@ function getRandomUserRetention() {
 }
 
 // --- Real Data Functions ---
-
 export async function getReach() {
   const [response] = await analyticsDataClient.runReport({
     property: `properties/${process.env.GA4_PROPERTY_ID}`,
@@ -169,7 +170,6 @@ export async function getTrafficSources(type) {
   }));
 }
 
-
 export async function getEngagement(type) {
   if (type === 'example') return getRandomEngagement();
 
@@ -204,7 +204,7 @@ export async function getUserRetention(type) {
 
   return (response?.rows || []).map(row => ({
     date: row.dimensionValues[0]?.value,
-    userType: row.dimensionValues[1]?.value, // NEW or RETURNING
+    userType: row.dimensionValues[1]?.value,
     activeUsers: parseInt(row.metricValues[0]?.value || '0'),
   }));
 }
