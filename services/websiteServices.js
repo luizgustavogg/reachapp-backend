@@ -1,9 +1,8 @@
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import { format, subDays } from 'date-fns';
 
-let analyticsDataClient; // cliente será inicializado externamente
+let analyticsDataClient;
 
-// Esta função será chamada no server.js
 export function initAnalyticsClient(credentials) {
   analyticsDataClient = new BetaAnalyticsDataClient({ credentials });
 }
@@ -28,6 +27,10 @@ function getLast30Dates() {
 
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function getPropertyId() {
+  return `properties/${(process.env.GA4_PROPERTY_ID || "").trim()}`;
 }
 
 // --- Random Example Generators ---
@@ -88,7 +91,7 @@ function getRandomUserRetention() {
 // --- Real Data Functions ---
 export async function getReach() {
   const [response] = await analyticsDataClient.runReport({
-    property: `properties/${process.env.GA4_PROPERTY_ID}`,
+    property: getPropertyId(),
     dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
     dimensions: [{ name: 'date' }],
     metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
@@ -101,7 +104,7 @@ export async function getByDate(startDate, endDate, type) {
   if (type === 'example') return getRandomExampleByDate();
 
   const [response] = await analyticsDataClient.runReport({
-    property: `properties/${process.env.GA4_PROPERTY_ID}`,
+    property: getPropertyId(),
     dateRanges: buildDateRange(startDate, endDate),
     dimensions: [{ name: 'date' }],
     metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
@@ -118,7 +121,7 @@ export async function getByCountry(startDate, endDate, type) {
   if (type === 'example') return getRandomExampleByCountry();
 
   const [response] = await analyticsDataClient.runReport({
-    property: `properties/${process.env.GA4_PROPERTY_ID}`,
+    property: getPropertyId(),
     dateRanges: buildDateRange(startDate, endDate),
     dimensions: [{ name: 'date' }, { name: 'country' }],
     metrics: [{ name: 'sessions' }],
@@ -135,7 +138,7 @@ export async function getByDevice(startDate, endDate, type) {
   if (type === 'example') return getRandomExampleByDevice();
 
   const [response] = await analyticsDataClient.runReport({
-    property: `properties/${process.env.GA4_PROPERTY_ID}`,
+    property: getPropertyId(),
     dateRanges: buildDateRange(startDate, endDate),
     dimensions: [{ name: 'date' }, { name: 'deviceCategory' }],
     metrics: [{ name: 'sessions' }],
@@ -158,7 +161,7 @@ export async function getTrafficSources(type) {
   }
 
   const [response] = await analyticsDataClient.runReport({
-    property: `properties/${process.env.GA4_PROPERTY_ID}`,
+    property: getPropertyId(),
     dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
     dimensions: [{ name: 'sessionSource' }],
     metrics: [{ name: 'sessions' }],
@@ -174,7 +177,7 @@ export async function getEngagement(type) {
   if (type === 'example') return getRandomEngagement();
 
   const [response] = await analyticsDataClient.runReport({
-    property: `properties/${process.env.GA4_PROPERTY_ID}`,
+    property: getPropertyId(),
     dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
     metrics: [{ name: 'averageSessionDuration' }, { name: 'engagedSessions' }],
   });
@@ -196,7 +199,7 @@ export async function getUserRetention(type) {
   }
 
   const [response] = await analyticsDataClient.runReport({
-    property: `properties/${process.env.GA4_PROPERTY_ID}`,
+    property: getPropertyId(),
     dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
     dimensions: [{ name: 'date' }, { name: 'newVsReturning' }],
     metrics: [{ name: 'activeUsers' }],
