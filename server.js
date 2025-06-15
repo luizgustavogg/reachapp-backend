@@ -1,10 +1,12 @@
 import express from "express";
 import dotenv from "dotenv";
+import { readFileSync } from "fs";
 import {
   getProfileInsights,
   getRecentPostsInsights,
 } from "./services/instagramServices.js";
 import {
+  initAnalyticsClient,
   getReach,
   getByDate,
   getByCountry,
@@ -14,9 +16,30 @@ import {
   getUserRetention,
 } from "./services/websiteServices.js";
 
+// .env
 dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Inicializa o cliente GA4 com as credenciais
+let credentials;
+
+try {
+  if (process.env.SERVICE_ACCOUNT_JSON) {
+    credentials = JSON.parse(process.env.SERVICE_ACCOUNT_JSON);
+  } else {
+    const raw = readFileSync("./service-account.json", "utf8");
+    credentials = JSON.parse(raw);
+  }
+
+  initAnalyticsClient(credentials); // 🔥 ESSA LINHA É O QUE FALTAVA
+  console.log("✅ Cliente GA4 inicializado com sucesso");
+} catch (err) {
+  console.error("❌ Erro ao carregar credenciais GA4:", err.message);
+  process.exit(1);
+}
+
 
 app.get("/insights/perfil", async (_req, res) => {
   try {
