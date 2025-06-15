@@ -133,6 +133,7 @@ app.get("/analytics/user-retention", async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar dados de retenção" });
   }
 });
+console.log("🔍 GA4_PROPERTY_ID:", process.env.GA4_PROPERTY_ID);
 
 // INICIA SERVIDOR
 app.listen(PORT, () => {
