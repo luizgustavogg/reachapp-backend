@@ -1,6 +1,5 @@
 import express from "express";
 import dotenv from "dotenv";
-import { readFileSync } from "fs";
 import {
   getProfileInsights,
   getRecentPostsInsights,
@@ -16,31 +15,23 @@ import {
   getUserRetention,
 } from "./services/websiteServices.js";
 
-// .env
+// Carrega variáveis de ambiente (usado localmente)
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Inicializa o cliente GA4 com as credenciais
-let credentials;
-
+// Inicializa o cliente GA4 com as credenciais (100% via variável de ambiente)
 try {
-  if (process.env.SERVICE_ACCOUNT_JSON) {
-    credentials = JSON.parse(process.env.SERVICE_ACCOUNT_JSON);
-  } else {
-    const raw = readFileSync("./service-account.json", "utf8");
-    credentials = JSON.parse(raw);
-  }
-
-  initAnalyticsClient(credentials); // 🔥 ESSA LINHA É O QUE FALTAVA
+  const credentials = JSON.parse(process.env.SERVICE_ACCOUNT_JSON);
+  initAnalyticsClient(credentials);
   console.log("✅ Cliente GA4 inicializado com sucesso");
 } catch (err) {
   console.error("❌ Erro ao carregar credenciais GA4:", err.message);
   process.exit(1);
 }
 
-
+// ROTAS INSTAGRAM
 app.get("/insights/perfil", async (_req, res) => {
   try {
     const data = await getProfileInsights();
@@ -61,6 +52,7 @@ app.get("/insights/postagens", async (_req, res) => {
   }
 });
 
+// ROTAS GOOGLE ANALYTICS
 app.get("/analytics/reach", async (_req, res) => {
   try {
     const data = await getReach();
@@ -137,6 +129,7 @@ app.get("/analytics/user-retention", async (req, res) => {
   }
 });
 
+// INICIA SERVIDOR
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
