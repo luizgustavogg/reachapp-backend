@@ -30,7 +30,9 @@ function getRandomInt(min, max) {
 }
 
 function getPropertyId() {
-  return `properties/493449965`;
+  const id = process.env.GA4_PROPERTY_ID?.trim();
+  if (!id) throw new Error("GA4_PROPERTY_ID não está definida");
+  return `properties/${id}`;
 }
 
 // --- Random Example Generators ---
