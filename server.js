@@ -23,6 +23,7 @@ const PORT = process.env.PORT || 3000;
 
 // Inicializa o cliente GA4 com as credenciais (100% via variável de ambiente)
 try {
+  console.log("🧪 SERVICE_ACCOUNT_JSON está definida?", !!process.env.SERVICE_ACCOUNT_JSON);
   const credentials = JSON.parse(process.env.SERVICE_ACCOUNT_JSON);
   initAnalyticsClient(credentials);
   console.log("✅ Cliente GA4 inicializado com sucesso");
